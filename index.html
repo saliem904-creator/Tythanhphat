@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0048)https://saliem904-creator.github.io/Tythanhphat/ -->
+<html lang="vi"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HỆ THỐNG TRA CỨU & SOẠN HÀNG THÔNG MINH</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+<title>HỆ THỐNG TRA CỨU &amp; SOẠN HÀNG THÔNG MINH</title>
+<script src="./index_files/xlsx.full.min.js.tải xuống"></script>
+<script src="./index_files/tesseract.min.js.tải xuống"></script>
 <style>
   :root {
     --primary: #1e3a8a;
@@ -116,10 +116,10 @@
 
 <div class="header no-print">
   <div>
-    <h1>⚡ HỆ THỐNG TRA CỨU, ĐẢO TỪ & PHÂN TÍCH SOẠN HÀNG</h1>
+    <h1>⚡ HỆ THỐNG TRA CỨU, ĐẢO TỪ &amp; PHÂN TÍCH SOẠN HÀNG</h1>
     <p style="font-size: 11.5px; color: #64748b;">Hỗ trợ: Tìm gần đúng, Đảo chữ (không dấu), Dán ảnh chụp toa, Tải File Excel đơn hàng</p>
   </div>
-  <div id="dbStatus" class="status-badge badge-warn">⚠️ Đang kiểm tra dữ liệu...</div>
+  <div id="dbStatus" class="status-badge badge-ok">✅ Đã tải 35.050 mặt hàng</div>
 </div>
 
 <div class="grid">
@@ -130,8 +130,8 @@
         <span>🎯 CHỌN ĐIỂM BÁN HÀNG</span>
       </div>
       <div class="mode-select">
-        <button id="btnSaleTiem" class="mode-btn active" onclick="setSaleMode('tiem')">🏪 Bán Lẻ Tại Tiệm</button>
-        <button id="btnSaleKho" class="mode-btn" onclick="setSaleMode('kho')">📦 Kho Gửi Xe Khách</button>
+        <button id="btnSaleTiem" class="mode-btn active" onclick="setSaleMode(&#39;tiem&#39;)">🏪 Bán Lẻ Tại Tiệm</button>
+        <button id="btnSaleKho" class="mode-btn" onclick="setSaleMode(&#39;kho&#39;)">📦 Kho Gửi Xe Khách</button>
       </div>
       <p style="font-size: 11px; color: #64748b;">* Hệ thống tự tính toán ưu tiên vị trí có hàng gần nhất để bạn soạn.</p>
     </div>
@@ -142,18 +142,24 @@
       </div>
 
       <!-- Kéo thả Hóa Đơn / Ảnh Chụp Toa -->
-      <div class="media-drop" onclick="document.getElementById('mediaInput').click()">
+      <div class="media-drop" onclick="document.getElementById(&#39;mediaInput&#39;).click()">
         📸 <b>Dán/Chọn Ảnh chụp toa HOẶC Kéo File Excel đơn hàng</b><br>
-        <span style="font-size: 10.5px; color: #475569;">(Tự động trích xuất chính xác Mã hàng & Số lượng)</span>
+        <span style="font-size: 10.5px; color: #475569;">(Tự động trích xuất chính xác Mã hàng &amp; Số lượng)</span>
         <input type="file" id="mediaInput" accept="image/*,.xlsx,.xls,.csv" style="display:none;" onchange="handleMediaUpload(this.files)">
       </div>
 
-      <textarea id="inputCodes" class="input-box" oninput="debounceProcess()" placeholder="Dán mã hàng, tên hàng hoặc từ khóa đảo chữ...&#10;Ví dụ:&#10;35601-07H00V000K 1&#10;61000K1NV10ZA 2&#10;A.11833 1&#10;5053AKPHE20 5&#10;A.4041 5"></textarea>
+      <textarea id="inputCodes" class="input-box" oninput="debounceProcess()" placeholder="Dán mã hàng, tên hàng hoặc từ khóa đảo chữ...
+Ví dụ:
+35601-07H00V000K 1
+61000K1NV10ZA 2
+A.11833 1
+5053AKPHE20 5
+A.4041 5"></textarea>
       
       <div class="btn-group">
         <button class="btn btn-primary" onclick="processSearch()">⚡ Phân Tích Ngay</button>
         <button class="btn btn-outline" onclick="pasteSample()">Mã ví dụ</button>
-        <button class="btn btn-outline" onclick="document.getElementById('inputCodes').value=''; processSearch();">Xóa</button>
+        <button class="btn btn-outline" onclick="document.getElementById(&#39;inputCodes&#39;).value=&#39;&#39;; processSearch();">Xóa</button>
       </div>
     </div>
 
@@ -162,14 +168,14 @@
         <span>📂 3 FILE DỮ LIỆU GỐC</span>
         <button class="btn btn-outline" style="padding: 2px 6px; font-size: 10px; color: var(--danger);" onclick="clearDatabase()">Làm mới</button>
       </div>
-      <div class="upload-box" onclick="document.getElementById('fileInput').click()" style="border: 1px dashed #94a3b8; padding: 6px; text-align: center; cursor: pointer; background: #f8fafc; font-size: 11.5px; margin-bottom: 6px; border-radius: 4px;">
+      <div class="upload-box" onclick="document.getElementById(&#39;fileInput&#39;).click()" style="border: 1px dashed #94a3b8; padding: 6px; text-align: center; cursor: pointer; background: #f8fafc; font-size: 11.5px; margin-bottom: 6px; border-radius: 4px;">
         📥 <b>Kéo thả 3 file Excel vào đây</b> (Tự động lưu vĩnh viễn)
-        <input type="file" id="fileInput" multiple accept=".xls,.xlsx" style="display:none;" onchange="handleFileUpload(this.files)">
+        <input type="file" id="fileInput" multiple="" accept=".xls,.xlsx" style="display:none;" onchange="handleFileUpload(this.files)">
       </div>
       <div id="fileList" style="font-size: 11.5px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>1. File SV:</span> <b id="countDoc" style="color:var(--primary);">0 mã</b></div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>2. File Kho:</span> <b id="countKho" style="color:var(--primary);">0 mã</b></div>
-        <div style="display:flex; justify-content:space-between;"><span>3. File Tiệm:</span> <b id="countTiem" style="color:var(--primary);">0 mã</b></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>1. File SV:</span> <b id="countDoc" style="color:var(--primary);">34740 mã</b></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>2. File Kho:</span> <b id="countKho" style="color:var(--primary);">31862 mã</b></div>
+        <div style="display:flex; justify-content:space-between;"><span>3. File Tiệm:</span> <b id="countTiem" style="color:var(--primary);">31862 mã</b></div>
       </div>
     </div>
   </div>
@@ -178,12 +184,12 @@
   <div>
     <div class="card" style="margin-bottom: 0;">
       <div class="print-header">
-        <h2 id="printTitle">BẢNG PHÂN TÍCH VỊ TRÍ & SOẠN HÀNG TỐI ƯU</h2>
-        <p><b>Khách Hàng:</b> <span id="printCustomer" style="color:#b91c1c; font-weight:bold; font-size:13pt;">Khách Lẻ</span> | <b>Thời gian:</b> <span id="printDate"></span></p>
+        <h2 id="printTitle">BẢNG PHÂN TÍCH VỊ TRÍ &amp; SOẠN HÀNG TỐI ƯU</h2>
+        <p><b>Khách Hàng:</b> <span id="printCustomer" style="color:#b91c1c; font-weight:bold; font-size:13pt;">Khách Lẻ</span> | <b>Thời gian:</b> <span id="printDate">17:19:30 24/8/2026</span></p>
       </div>
 
       <div class="card-title no-print" style="margin-bottom: 6px;">
-        <span>📋 BẢNG SOẠN HÀNG & GỢI Ý ĐIỂM LẤY TỐI ƯU</span>
+        <span>📋 BẢNG SOẠN HÀNG &amp; GỢI Ý ĐIỂM LẤY TỐI ƯU</span>
         <div class="btn-group" style="margin-top: 0;">
           <button class="btn btn-success" onclick="copyTableData()">📋 Copy dán vào Excel</button>
           <button class="btn btn-outline" onclick="window.print()">🖨️ In A4</button>
@@ -1188,5 +1194,6 @@ function copyTableData() {
   });
 }
 </script>
-</body>
-</html>
+
+
+</body></html>
