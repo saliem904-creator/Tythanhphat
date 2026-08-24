@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<!-- saved from url=(0048)https://saliem904-creator.github.io/Tythanhphat/ -->
+<html lang="vi"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HỆ THỐNG TRA CỨU &amp; SOẠN HÀNG THÔNG MINH</title>
+<script src="./index_files/xlsx.full.min.js.tải xuống"></script>
+<script src="./index_files/tesseract.min.js.tải xuống"></script>
+<style>
+  :root {
+    --primary: #1e3a8a;
+    --primary-light: #2563eb;
+    --success: #15803d;
+    --danger: #b91c1c;
+    --warn: #b45309;
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --border: #cbd5e1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  body { background-color: var(--bg); color: #0f172a; padding: 10px; font-size: 13px; }
+  
+  .header { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .header h1 { font-size: 16px; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; }
+  .badge-ok { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+  .badge-warn { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+  .grid { display: grid; grid-template-columns: 330px 1fr; gap: 10px; }
+  @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+
+  .card { background: #fff; border-radius: 8px; border: 1px solid var(--border); padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 10px; }
+  .card-title { font-size: 12.5px; font-weight: 700; color: var(--primary); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; }
+
+  /* Input Modes */
+  .mode-select { display: flex; gap: 4px; margin-bottom: 8px; background: #e2e8f0; padding: 3px; border-radius: 6px; }
+  .mode-btn { flex: 1; border: none; background: none; padding: 5px; font-size: 11.5px; font-weight: 700; color: #475569; border-radius: 4px; cursor: pointer; text-align: center; }
+  .mode-btn.active { background: #fff; color: var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+
+  /* Drop zone & paste area */
+  .input-box { width: 100%; height: 160px; padding: 8px; border: 1px solid #94a3b8; border-radius: 6px; font-size: 12.5px; resize: vertical; outline: none; line-height: 1.4; font-family: monospace; }
+  .input-box:focus { border-color: var(--primary-light); box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
+
+  .media-drop { border: 2px dashed #3b82f6; border-radius: 6px; padding: 14px 8px; text-align: center; background: #eff6ff; cursor: pointer; margin-bottom: 8px; font-size: 12px; color: #1e40af; }
+  .media-drop:hover { background: #dbeafe; }
+
+  .btn-group { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .btn { border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s; }
+  .btn-primary { background: #1e40af; color: #fff; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-success { background: #15803d; color: #fff; }
+  .btn-success:hover { background: #166534; }
+  .btn-outline { background: #fff; border: 1px solid #cbd5e1; color: #334155; }
+  .btn-outline:hover { background: #f1f5f9; }
+
+  /* Summary Alert */
+  .alert-box { padding: 8px 12px; border-radius: 6px; margin-bottom: 10px; font-size: 12px; display: none; }
+  .alert-danger { background: #fef2f2; border: 1px solid #f87171; color: #991b1b; }
+  .alert-info { background: #eff6ff; border: 1px solid #93c5fd; color: #1e40af; }
+
+  /* Priority Location Tags */
+  .tag-loc { display: inline-block; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 11px; white-space: nowrap; }
+  .tag-tiem { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+  .tag-kho { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
+  .tag-warn { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+  .tag-out { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+  /* Table styling */
+  .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 6px; background: #fff; max-height: 75vh; }
+  table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12.5px; }
+  th { position: sticky; top: 0; background: #f8fafc; color: #1e293b; font-weight: 700; padding: 8px; border: 1px solid var(--border); z-index: 10; white-space: nowrap; }
+  td { padding: 6px 8px; border: 1px solid var(--border); }
+  tr:nth-child(even) { background-color: #f8fafc; }
+  tr:hover { background-color: #f0fdf4; }
+  
+  .pos-cell { font-weight: 700; color: #1e3a8a; }
+  .code-cell { font-weight: 700; font-family: monospace; font-size: 12px; }
+  .stock-num { font-weight: 700; text-align: center; }
+
+  /* Print Styles */
+  @media print {
+    body { background: #fff; padding: 0; font-size: 9.5pt; color: #000; }
+    .no-print { display: none !important; }
+    .grid { display: block; }
+    .card { border: none; box-shadow: none; padding: 0; margin: 0; }
+    .table-container { border: none; max-height: none; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #333 !important; padding: 4px 6px !important; font-size: 9pt; }
+    th { background: #eee !important; -webkit-print-color-adjust: exact; }
+    .print-header { display: block !important; margin-bottom: 8px; text-align: center; }
+    .print-header h2 { font-size: 12pt; margin-bottom: 2px; }
+    .print-header p { font-size: 8.5pt; color: #555; }
+    @page { size: A4 portrait; margin: 8mm; }
+  }
+  .print-header { display: none; }
+
+  .customer-input-large {
+    padding: 6px 12px;
+    border: 1.5px solid #ef4444;
+    border-radius: 6px;
+    font-size: 16.25px;
+    font-weight: 800;
+    color: #b91c1c;
+    outline: none;
+    width: 320px;
+    background: #fef2f2;
+  }
+  .customer-input-large:focus {
+    border-color: #dc2626;
+    background: #fff;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+  }
+</style>
+</head>
+<body>
+
+<div class="header no-print">
+  <div>
+    <h1>⚡ HỆ THỐNG TRA CỨU, ĐẢO TỪ &amp; PHÂN TÍCH SOẠN HÀNG</h1>
+    <p style="font-size: 11.5px; color: #64748b;">Hỗ trợ: Tìm gần đúng, Đảo chữ (không dấu), Dán ảnh chụp toa, Tải File Excel đơn hàng</p>
+  </div>
+  <div id="dbStatus" class="status-badge badge-ok">✅ Đã tải 35.050 mặt hàng</div>
+</div>
+
+<div class="grid">
+  <!-- Bảng điều khiển bên trái -->
+  <div class="no-print">
+    <div class="card">
+      <div class="card-title">
+        <span>🎯 CHỌN ĐIỂM BÁN HÀNG</span>
+      </div>
+      <div class="mode-select">
+        <button id="btnSaleTiem" class="mode-btn active" onclick="setSaleMode(&#39;tiem&#39;)">🏪 Bán Lẻ Tại Tiệm</button>
+        <button id="btnSaleKho" class="mode-btn" onclick="setSaleMode(&#39;kho&#39;)">📦 Kho Gửi Xe Khách</button>
+      </div>
+      <p style="font-size: 11px; color: #64748b;">* Hệ thống tự tính toán ưu tiên vị trí có hàng gần nhất để bạn soạn.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>📝 NHẬP MÃ / TÊN / ĐẢO CHỮ</span>
+      </div>
+
+      <!-- Kéo thả Hóa Đơn / Ảnh Chụp Toa -->
+      <div class="media-drop" onclick="document.getElementById(&#39;mediaInput&#39;).click()">
+        📸 <b>Dán/Chọn Ảnh chụp toa HOẶC Kéo File Excel đơn hàng</b><br>
+        <span style="font-size: 10.5px; color: #475569;">(Tự động trích xuất chính xác Mã hàng &amp; Số lượng)</span>
+        <input type="file" id="mediaInput" accept="image/*,.xlsx,.xls,.csv" style="display:none;" onchange="handleMediaUpload(this.files)">
+      </div>
+
+      <textarea id="inputCodes" class="input-box" oninput="debounceProcess()" placeholder="Dán mã hàng, tên hàng hoặc từ khóa đảo chữ...
+Ví dụ:
+35601-07H00V000K 1
+61000K1NV10ZA 2
+A.11833 1
+5053AKPHE20 5
+A.4041 5"></textarea>
+      
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="processSearch()">⚡ Phân Tích Ngay</button>
+        <button class="btn btn-outline" onclick="pasteSample()">Mã ví dụ</button>
+        <button class="btn btn-outline" onclick="document.getElementById(&#39;inputCodes&#39;).value=&#39;&#39;; processSearch();">Xóa</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>📂 3 FILE DỮ LIỆU GỐC</span>
+        <button class="btn btn-outline" style="padding: 2px 6px; font-size: 10px; color: var(--danger);" onclick="clearDatabase()">Làm mới</button>
+      </div>
+      <div class="upload-box" onclick="document.getElementById(&#39;fileInput&#39;).click()" style="border: 1px dashed #94a3b8; padding: 6px; text-align: center; cursor: pointer; background: #f8fafc; font-size: 11.5px; margin-bottom: 6px; border-radius: 4px;">
+        📥 <b>Kéo thả 3 file Excel vào đây</b> (Tự động lưu vĩnh viễn)
+        <input type="file" id="fileInput" multiple="" accept=".xls,.xlsx" style="display:none;" onchange="handleFileUpload(this.files)">
+      </div>
+      <div id="fileList" style="font-size: 11.5px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>1. File SV:</span> <b id="countDoc" style="color:var(--primary);">34740 mã</b></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>2. File Kho:</span> <b id="countKho" style="color:var(--primary);">31862 mã</b></div>
+        <div style="display:flex; justify-content:space-between;"><span>3. File Tiệm:</span> <b id="countTiem" style="color:var(--primary);">31862 mã</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bảng kết quả bên phải -->
+  <div>
+    <div class="card" style="margin-bottom: 0;">
+      <div class="print-header">
+        <h2 id="printTitle">BẢNG PHÂN TÍCH VỊ TRÍ &amp; SOẠN HÀNG TỐI ƯU</h2>
+        <p><b>Khách Hàng:</b> <span id="printCustomer" style="color:#b91c1c; font-weight:bold; font-size:13pt;">Khách Lẻ</span> | <b>Thời gian:</b> <span id="printDate">17:19:30 24/8/2026</span></p>
+      </div>
+
+      <div class="card-title no-print" style="margin-bottom: 6px;">
+        <span>📋 BẢNG SOẠN HÀNG &amp; GỢI Ý ĐIỂM LẤY TỐI ƯU</span>
+        <div class="btn-group" style="margin-top: 0;">
+          <button class="btn btn-success" onclick="copyTableData()">📋 Copy dán vào Excel</button>
+          <button class="btn btn-outline" onclick="window.print()">🖨️ In A4</button>
+        </div>
+      </div>
+      
+      <div class="no-print" style="margin-bottom: 10px; background: #f8fafc; padding: 8px 10px; border-radius: 6px; border: 1px dashed var(--border); display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 12.5px; font-weight: 700; color: #475569;">👤 TÊN KHÁCH HÀNG:</span>
+        <input type="text" id="customerName" class="customer-input-large" placeholder="Nhập tên Khách Hàng..." oninput="updateCustomerInfo()">
+      </div>
+
+      <div id="outAlert" class="alert-box alert-danger"></div>
+      <div id="ocrStatus" class="alert-box alert-info"></div>
+
+      <div class="table-container">
+        <table id="mainTable">
+          <thead>
+            <tr>
+              <th style="width: 35px; text-align: center;">STT</th>
+              <th>ĐIỂM NÊN SOẠN</th>
+              <th>Mã Hàng</th>
+              <th>Tên hàng</th>
+              <th style="width: 40px; text-align: center;">ĐVT</th>
+              <th style="width: 60px; text-align: center; color:#b91c1c;">SL (Đơn Hàng)</th>
+              <th style="width: 45px; text-align: center; color:#15803d;">Tiệm</th>
+              <th style="width: 45px; text-align: center; color:#0369a1;">Kho</th>
+              <th style="width: 45px; text-align: center; color:#b91c1c;">SV</th>
+              <th>Vị Trí Kệ - Tầng (Chi tiết)</th>
+              <th style="text-align: center;">Người giữ</th>
+            </tr>
+          </thead>
+          <tbody id="resultBody">
+            <tr>
+              <td colspan="11" style="text-align: center; color: #94a3b8; padding: 40px;">
+                Chưa có dữ liệu. Vui lòng dán mã hàng, tên hàng (hoặc ảnh chụp toa / file excel đơn hàng).
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let RAW_ITEMS = [];
+let itemDatabase = [];
+let fileDataSV = {};
+let fileDataKho = {};
+let fileDataTiem = {};
+let saleMode = 'tiem';
+let lastResults = [];
+let debounceTimer = null;
+
+// ==================== CƠ CHẾ LƯU TRỮ VĨNH VIỄN (INDEXEDDB) ====================
+const DB_NAME = 'WarehouseAppDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'datasets';
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = function(e) {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function saveToDB(key, data) {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put(data, key);
+  } catch (err) {
+    console.error('Lỗi khi lưu dữ liệu:', err);
+  }
+}
+
+async function loadFromDB() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+
+    const getSV = new Promise(res => { store.get('fileDataSV').onsuccess = e => res(e.target.result || {}); });
+    const getKho = new Promise(res => { store.get('fileDataKho').onsuccess = e => res(e.target.result || {}); });
+    const getTiem = new Promise(res => { store.get('fileDataTiem').onsuccess = e => res(e.target.result || {}); });
+
+    [fileDataSV, fileDataKho, fileDataTiem] = await Promise.all([getSV, getKho, getTiem]);
+
+    document.getElementById('countDoc').innerText = Object.keys(fileDataSV).length + ' mã';
+    document.getElementById('countKho').innerText = Object.keys(fileDataKho).length + ' mã';
+    document.getElementById('countTiem').innerText = Object.keys(fileDataTiem).length + ' mã';
+
+    mergeDatasets();
+  } catch (err) {
+    console.error('Lỗi khi nạp dữ liệu đã lưu:', err);
+  }
+}
+
+async function clearDatabase() {
+  if (!confirm('Bạn có chắc muốn xóa sạch toàn bộ 3 file đã lưu trong trình duyệt?')) return;
+  fileDataSV = {};
+  fileDataKho = {};
+  fileDataTiem = {};
+  RAW_ITEMS = [];
+  itemDatabase = [];
+  
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).clear();
+  } catch(e) {}
+
+  document.getElementById('countDoc').innerText = '0 mã';
+  document.getElementById('countKho').innerText = '0 mã';
+  document.getElementById('countTiem').innerText = '0 mã';
+  document.getElementById('dbStatus').className = 'status-badge badge-warn';
+  document.getElementById('dbStatus').innerText = '⚠️ Chưa có dữ liệu';
+  processSearch();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('printDate').innerText = new Date().toLocaleString('vi-VN');
+  loadFromDB();
+});
+
+// ==================== XỬ LÝ DỮ LIỆU & TRA CỨU ====================
+
+function setSaleMode(mode) {
+  saleMode = mode;
+  document.getElementById('btnSaleTiem').className = mode === 'tiem' ? 'mode-btn active' : 'mode-btn';
+  document.getElementById('btnSaleKho').className = mode === 'kho' ? 'mode-btn active' : 'mode-btn';
+  processSearch();
+}
+
+function updateCustomerInfo() {
+  const name = document.getElementById('customerName').value.trim();
+  document.getElementById('printCustomer').innerText = name || 'Khách Lẻ';
+}
+
+function removeVietnameseTones(str) {
+  if (!str) return '';
+  str = str.toLowerCase();
+  str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+  str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+  str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+  str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+  str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+  str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+  str = str.replace(/đ/g, "d");
+  str = str.replace(/[\u0300-\u036f]/g, "");
+  return str;
+}
+
+function normalizeCode(c) {
+  if (!c) return '';
+  return c.toString()
+    .replace(/^['"`‘’\s]+/g, '')
+    .replace(/[.\s]+$/g, '')
+    .replace(/[-. \t\r\n'"`‘’]/g, '')
+    .toUpperCase();
+}
+
+function buildIndex(items) {
+  itemDatabase = items.map(item => {
+    let cleanCode = normalizeCode(item.c);
+    let normName = removeVietnameseTones(item.t);
+    let fullSearchText = cleanCode + ' ' + normName + ' ' + (item.t ? item.t.toLowerCase() : '');
+    return {
+      ...item,
+      cleanCode: cleanCode,
+      normName: normName,
+      fullSearchText: fullSearchText
+    };
+  });
+  let dbStatus = document.getElementById('dbStatus');
+  if (dbStatus) {
+    if (itemDatabase.length > 0) {
+      dbStatus.className = 'status-badge badge-ok';
+      dbStatus.innerText = '✅ Đã tải ' + itemDatabase.length.toLocaleString('vi-VN') + ' mặt hàng';
+    } else {
+      dbStatus.className = 'status-badge badge-warn';
+      dbStatus.innerText = '⚠️ Chưa có dữ liệu';
+    }
+  }
+}
+
+function handleFileUpload(files) {
+  if (!files || files.length === 0) return;
+
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[firstSheetName];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+      if (rows.length < 2) return;
+      const fileName = file.name.toLowerCase();
+
+      // 1. File SV
+      if (fileName.includes('sv')) {
+        fileDataSV = {};
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          const code = (row[0] || '').toString().trim();
+          if (!code) continue;
+          fileDataSV[code] = {
+            c: code,
+            t: (row[1] || '').toString().trim(),
+            d: (row[2] || '').toString().trim(),
+            s: parseFloat(row[6]) || 0
+          };
+        }
+        document.getElementById('countDoc').innerText = Object.keys(fileDataSV).length + ' mã';
+        await saveToDB('fileDataSV', fileDataSV);
+      }
+      // 2. File Kho
+      else if (fileName.includes('kho')) {
+        fileDataKho = {};
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          const code = (row[2] || '').toString().trim();
+          if (!code) continue;
+          fileDataKho[code] = {
+            t: (row[4] || '').toString().trim(),
+            d: (row[14] || '').toString().trim(),
+            k: parseFloat(row[8]) || 0,
+            kv: (row[25] || '').toString().trim(),
+            km: (row[23] || '').toString().trim()
+          };
+        }
+        document.getElementById('countKho').innerText = Object.keys(fileDataKho).length + ' mã';
+        await saveToDB('fileDataKho', fileDataKho);
+      }
+      // 3. File Tiệm
+      else if (fileName.includes('tiệm') || fileName.includes('tiem')) {
+        fileDataTiem = {};
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          const code = (row[2] || '').toString().trim();
+          if (!code) continue;
+          fileDataTiem[code] = {
+            t: (row[4] || '').toString().trim(),
+            d: (row[14] || '').toString().trim(),
+            tm: parseFloat(row[8]) || 0,
+            tv: (row[25] || '').toString().trim(),
+            tm_m: (row[23] || '').toString().trim()
+          };
+        }
+        document.getElementById('countTiem').innerText = Object.keys(fileDataTiem).length + ' mã';
+        await saveToDB('fileDataTiem', fileDataTiem);
+      }
+
+      mergeDatasets();
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function mergeDatasets() {
+  const allCodes = new Set([
+    ...Object.keys(fileDataSV),
+    ...Object.keys(fileDataKho),
+    ...Object.keys(fileDataTiem)
+  ]);
+
+  RAW_ITEMS = Array.from(allCodes).map(code => {
+    const sv = fileDataSV[code] || {};
+    const kho = fileDataKho[code] || {};
+    const tiem = fileDataTiem[code] || {};
+
+    return {
+      c: code,
+      t: sv.t || kho.t || tiem.t || '',
+      d: sv.d || kho.d || tiem.d || '',
+      s: sv.s || 0,
+      k: kho.k || 0,
+      kv: kho.kv || '',
+      km: kho.km || '',
+      tm: tiem.tm || 0,
+      tv: tiem.tv || '',
+      tm_m: tiem.tm_m || ''
+    };
+  });
+
+  buildIndex(RAW_ITEMS);
+}
+
+// ==================== BỘ LỌC OCR THEO TỌA ĐỘ DÒNG (CHỈ LẤY MÃ + SỐ LƯỢNG) ====================
+
+function handleMediaUpload(files) {
+  if (!files || files.length === 0) return;
+  let file = files[0];
+  let ext = file.name.split('.').pop().toLowerCase();
+  let statusEl = document.getElementById('ocrStatus');
+
+  if (['xlsx', 'xls', 'csv'].includes(ext)) {
+    statusEl.style.display = 'block';
+    statusEl.innerText = '⏳ Đang đọc và tự động lọc mã & số lượng từ file Excel...';
+    let reader = new FileReader();
+    reader.onload = function(e) {
+      let data = new Uint8Array(e.target.result);
+      let workbook = XLSX.read(data, { type: 'array' });
+      let sheetName = workbook.SheetNames[0];
+      let jsonRows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+      
+      let colCode = -1;
+      let colQty = -1;
+      let headerIdx = -1;
+
+      for (let rIdx = 0; rIdx < Math.min(jsonRows.length, 10); rIdx++) {
+        let row = jsonRows[rIdx];
+        if (!row || !Array.isArray(row)) continue;
+        for (let cIdx = 0; cIdx < row.length; cIdx++) {
+          let cellStr = (row[cIdx] || '').toString().trim().toLowerCase();
+          if (['mã hàng', 'mã vật tư', 'mã', 'mã sp', 'mã sản phẩm', 'code', 'item code'].includes(cellStr)) {
+            colCode = cIdx;
+          }
+          if (['số lượng', 'sl', 'qty', 'quantity', 'soluong'].includes(cellStr)) {
+            colQty = cIdx;
+          }
+        }
+        if (colCode !== -1) {
+          headerIdx = rIdx;
+          break;
+        }
+      }
+
+      let formattedLines = [];
+      if (headerIdx !== -1 && colCode !== -1) {
+        for (let r = headerIdx + 1; r < jsonRows.length; r++) {
+          let row = jsonRows[r];
+          if (!row || row[colCode] === undefined || row[colCode] === null) continue;
+          let codeStr = row[colCode].toString().replace(/^['"`‘’\s]+/g, '').replace(/[.\s]+$/g, '').trim();
+          if (!codeStr || codeStr.toLowerCase().startsWith('tổng') || codeStr.toLowerCase().startsWith('cộng')) continue;
+          let qty = 1;
+          if (colQty !== -1 && row[colQty] !== undefined && row[colQty] !== null) {
+            let qNum = parseFloat(row[colQty].toString().trim());
+            if (!isNaN(qNum) && qNum > 0) qty = qNum;
+          }
+          formattedLines.push(codeStr + ' ' + qty);
+        }
+      } else {
+        jsonRows.forEach(row => {
+          if (row && row.length > 0) {
+            let rowStr = row.filter(cell => cell !== undefined && cell !== null && cell !== '').join(' ');
+            if (rowStr.trim()) formattedLines.push(rowStr.trim());
+          }
+        });
+      }
+
+      document.getElementById('inputCodes').value = formattedLines.join('\n');
+      statusEl.style.display = 'none';
+      processSearch();
+    };
+    reader.readAsArrayBuffer(file);
+  } else if (file.type.startsWith('image/')) {
+    statusEl.style.display = 'block';
+    statusEl.innerText = '🔍 Đang phân tích ảnh và trích xuất Mã hàng + Số lượng...';
+    
+    Tesseract.recognize(file, 'vie+eng', {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          statusEl.innerText = `🔍 Đang quét ảnh: ${Math.round(m.progress * 100)}%`;
+        }
+      }
+    }).then(({ data }) => {
+      statusEl.style.display = 'none';
+      let extractedLines = extractCodesAndQtyClustered(data);
+      if (extractedLines.length > 0) {
+        document.getElementById('inputCodes').value = extractedLines.join('\n');
+      } else {
+        document.getElementById('inputCodes').value = data.text;
+      }
+      processSearch();
+    }).catch(err => {
+      statusEl.className = 'alert-box alert-danger';
+      statusEl.innerText = '❌ Không thể nhận diện ảnh. Bạn hãy dán text vào ô bên dưới.';
+    });
+  }
+}
+
+// Gom cụm từ theo dòng Y và bóc tách chính xác Mã Hàng + Số Lượng
+function extractCodesAndQtyClustered(data) {
+  let words = data.words || [];
+  if (!words || words.length === 0) {
+    return extractCodesFromRawTextFallback(data.text || '');
+  }
+
+  // 1. Nhóm từ theo tọa độ dọc Y (cùng dòng)
+  words.sort((a, b) => {
+    let yDiff = (a.bbox.y0 + a.bbox.y1) / 2 - (b.bbox.y0 + b.bbox.y1) / 2;
+    if (Math.abs(yDiff) > 16) return yDiff;
+    return a.bbox.x0 - b.bbox.x0;
+  });
+
+  let lines = [];
+  let currentLine = [];
+  let currentY = -1;
+
+  for (let w of words) {
+    let midY = (w.bbox.y0 + w.bbox.y1) / 2;
+    if (currentY === -1 || Math.abs(midY - currentY) <= 18) {
+      currentLine.push(w);
+      if (currentY === -1) currentY = midY;
+      else currentY = (currentY * (currentLine.length - 1) + midY) / currentLine.length;
+    } else {
+      lines.push(currentLine);
+      currentLine = [w];
+      currentY = midY;
+    }
+  }
+  if (currentLine.length > 0) lines.push(currentLine);
+
+  let dbCleanMap = {};
+  itemDatabase.forEach(item => {
+    let clean = normalizeCode(item.c);
+    dbCleanMap[clean] = item.c;
+  });
+
+  const dvtList = ['cái', 'cai', 'bộ', 'bo', 'sợi', 'soi', 'cặp', 'cap', 'cây', 'cay', 'chai', 'con', 'bánh', 'banh', 'cuộn', 'cuon', 'bịt', 'bit', 'bịch', 'hộp', 'hop', 'thùng', 'bình', 'lon', 'vỉ', 'vi', 'gói', 'ống', 'can', 'c'];
+
+  let results = [];
+
+  for (let lineWords of lines) {
+    lineWords.sort((a, b) => a.bbox.x0 - b.bbox.x0);
+    let lineStr = lineWords.map(w => w.text).join(' ');
+
+    let foundCode = null;
+    let foundQty = 1;
+
+    // 2. Tìm mã khớp với CSDL
+    for (let i = 0; i < lineWords.length; i++) {
+      let wt = lineWords[i].text.trim();
+      let cl = normalizeCode(wt);
+
+      if (dbCleanMap[cl]) {
+        foundCode = dbCleanMap[cl];
+        break;
+      }
+      // Ghép từ liền kề (trường hợp mã bị cách khoảng)
+      if (i < lineWords.length - 1) {
+        let cl2 = normalizeCode(wt + lineWords[i + 1].text);
+        if (dbCleanMap[cl2]) {
+          foundCode = dbCleanMap[cl2];
+          break;
+        }
+      }
+    }
+
+    // Regex fallback mã phụ tùng
+    if (!foundCode) {
+      let mA = lineStr.match(/\b(A\.\d+)\b/i);
+      if (mA) {
+        foundCode = mA[1].toUpperCase();
+      } else {
+        let mPn = lineStr.match(/\b([0-9]{4,6}-[A-Z0-9]{4,15}|[0-9]{5}[A-Z0-9]{6,12}|[0-9]{13}|[A-Z0-9]{8,15})\b/gi);
+        if (mPn) {
+          for (let pn of mPn) {
+            let up = pn.toUpperCase();
+            if (!up.startsWith('BL') && !up.startsWith('HD') && !up.startsWith('CUAHANG')) {
+              foundCode = up;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    if (foundCode) {
+      // 3. Trích xuất chính xác Số Lượng nằm cạnh Đơn Vị Tính
+      let dvtIdx = -1;
+      for (let i = 0; i < lineWords.length; i++) {
+        let normW = lineWords[i].text.toLowerCase().replace(/[.,;:()]/g, '');
+        if (dvtList.includes(normW)) {
+          dvtIdx = i;
+          break;
+        }
+      }
+
+      if (dvtIdx !== -1) {
+        // Tìm số nguyên nằm ngay sau ĐVT
+        for (let j = dvtIdx + 1; j < Math.min(lineWords.length, dvtIdx + 4); j++) {
+          let cleanN = lineWords[j].text.replace(/[^0-9]/g, '');
+          let num = parseInt(cleanN, 10);
+          if (!isNaN(num) && num > 0 && num < 1000) {
+            foundQty = num;
+            break;
+          }
+        }
+      } else {
+        let mQ = lineStr.match(/(?:sl|qty|soluong|[x*:\-])\s*(\d{1,4})\b/i);
+        if (mQ) {
+          foundQty = parseInt(mQ[1], 10);
+        } else {
+          // Lấy số cuối dòng (loại trừ giá tiền lớn hơn 1000)
+          for (let j = lineWords.length - 1; j >= 0; j--) {
+            let cleanN = lineWords[j].text.replace(/[^0-9]/g, '');
+            let num = parseInt(cleanN, 10);
+            if (!isNaN(num) && num > 0 && num < 500 && lineWords[j].text.trim() === num.toString()) {
+              foundQty = num;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!results.some(r => r.startsWith(foundCode))) {
+        results.push(foundCode + ' ' + foundQty);
+      }
+    }
+  }
+
+  return results;
+}
+
+function extractCodesFromRawTextFallback(rawText) {
+  let lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  let dbCleanMap = {};
+  itemDatabase.forEach(item => {
+    dbCleanMap[normalizeCode(item.c)] = item.c;
+  });
+
+  let res = [];
+  lines.forEach(line => {
+    let code = null;
+    let tokens = line.split(/[\s|\t,;:]+/);
+    for (let t of tokens) {
+      let cl = normalizeCode(t);
+      if (dbCleanMap[cl]) {
+        code = dbCleanMap[cl];
+        break;
+      }
+    }
+    if (!code) {
+      let mA = line.match(/\b(A\.\d+)\b/i);
+      if (mA) code = mA[1].toUpperCase();
+    }
+    if (code) {
+      let mQ = line.match(/(?:cái|bộ|sợi|cặp|cây|chai|con|bánh|cuộn|bịt|hộp|sl|[x*:\-])\s*(\d{1,4})/i);
+      let qty = mQ ? parseInt(mQ[1], 10) : 1;
+      res.push(code + ' ' + qty);
+    }
+  });
+  return res;
+}
+
+// Bóc tách text trong ô nhập liệu thành câu lệnh tra cứu + số lượng
+function parseInputToQueries(text) {
+  let lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  if (lines.length === 0) return [];
+
+  let hasTab = lines.some(l => l.includes('\t'));
+  let colCode = -1;
+  let colQty = -1;
+  let headerLineIdx = -1;
+
+  if (hasTab) {
+    for (let rIdx = 0; rIdx < Math.min(lines.length, 5); rIdx++) {
+      let cells = lines[rIdx].split('\t').map(c => c.trim().toLowerCase());
+      for (let cIdx = 0; cIdx < cells.length; cIdx++) {
+        let str = cells[cIdx];
+        if (['mã hàng', 'mã vật tư', 'mã', 'mã sp', 'mã sản phẩm', 'code', 'item code'].includes(str)) {
+          colCode = cIdx;
+        }
+        if (['số lượng', 'sl', 'qty', 'quantity', 'soluong'].includes(str)) {
+          colQty = cIdx;
+        }
+      }
+      if (colCode !== -1) {
+        headerLineIdx = rIdx;
+        break;
+      }
+    }
+  }
+
+  let queries = [];
+
+  if (headerLineIdx !== -1 && colCode !== -1) {
+    for (let i = headerLineIdx + 1; i < lines.length; i++) {
+      let parts = lines[i].split('\t');
+      if (colCode < parts.length) {
+        let rawCode = parts[colCode].replace(/^['"`‘’\s]+/g, '').replace(/[.\s]+$/g, '').trim();
+        if (!rawCode || rawCode.toLowerCase().startsWith('tổng') || rawCode.toLowerCase().startsWith('cộng')) continue;
+        let qty = 1;
+        if (colQty !== -1 && colQty < parts.length) {
+          let qVal = parseFloat(parts[colQty].trim());
+          if (!isNaN(qVal) && qVal > 0) qty = qVal;
+        }
+        queries.push({ q: rawCode, qty: qty });
+      }
+    }
+  } else {
+    lines.forEach(line => {
+      line = line.replace(/^['"`‘’\s]+/g, '').trim();
+      if (!line) return;
+
+      let qty = 1;
+      let queryPart = line;
+
+      let matchSymbol = line.match(/^(\d{1,4})\s*(?:x|\*|:)\s*(.*)/i);
+      let matchSpace = line.match(/^(\d{1,4})\s+(?:-\s+)?(.*)/i);
+
+      if (matchSymbol && matchSymbol[2].trim().length > 1) {
+        qty = parseInt(matchSymbol[1], 10);
+        queryPart = matchSymbol[2].trim();
+      } else if (matchSpace && matchSpace[2].trim().length > 1) {
+        qty = parseInt(matchSpace[1], 10);
+        queryPart = matchSpace[2].trim();
+      } else {
+        let parts = line.split(/[\t|]+/);
+        if (parts.length >= 2) {
+          queryPart = parts[0].replace(/^['"`‘’\s]+/g, '').replace(/[.\s]+$/g, '').trim();
+          let qNum = parseFloat(parts[1].trim());
+          if (!isNaN(qNum) && qNum > 0) qty = qNum;
+        } else {
+          let spaceParts = line.trim().split(/\s+/);
+          let lastToken = spaceParts[spaceParts.length - 1];
+          if (spaceParts.length > 1 && !isNaN(parseFloat(lastToken)) && parseFloat(lastToken) > 0 && parseFloat(lastToken) < 1000) {
+            qty = parseFloat(lastToken);
+            queryPart = spaceParts.slice(0, -1).join(' ').replace(/^['"`‘’\s]+/g, '').replace(/[.\s]+$/g, '').trim();
+          } else {
+            queryPart = line.replace(/^['"`‘’\s]+/g, '').replace(/[.\s]+$/g, '').trim();
+          }
+        }
+      }
+
+      if (queryPart && !queryPart.toLowerCase().startsWith('tổng') && !queryPart.toLowerCase().startsWith('cộng')) {
+        queries.push({ q: queryPart, qty: qty });
+      }
+    });
+  }
+
+  return queries;
+}
+
+function findBestMatch(queryStr) {
+  let q = queryStr.trim();
+  if (!q) return null;
+
+  q = q.replace(/^['"`‘’\s]+/g, '').replace(/[.\s]+$/g, '').trim();
+  let qCleanCode = normalizeCode(q);
+  let qNorm = removeVietnameseTones(q);
+  let tokens = qNorm.split(/[\s,;+-_]+/).filter(t => t.length > 0);
+
+  // 1. Khớp mã chính xác
+  let exact = itemDatabase.find(x => x.cleanCode === qCleanCode);
+  if (exact) return exact;
+
+  // 2. Khớp tiền tố mã
+  if (qCleanCode.length >= 4) {
+    let prefixMatch = itemDatabase.filter(x => x.cleanCode.startsWith(qCleanCode));
+    if (prefixMatch.length > 0) {
+      prefixMatch.sort((a, b) => (b.tm + b.k + b.s) - (a.tm + a.k + a.s));
+      return prefixMatch[0];
+    }
+  }
+
+  // 3. Khớp nhiều từ khóa đảo chữ
+  if (tokens.length > 0) {
+    let scored = itemDatabase.map(x => {
+      let matchedCount = 0;
+      tokens.forEach(token => {
+        if (x.fullSearchText.includes(token)) {
+          matchedCount++;
+        }
+      });
+      return { item: x, score: matchedCount };
+    });
+
+    let minRequired = tokens.length;
+    let validMatches = scored.filter(s => s.score >= minRequired);
+
+    if (validMatches.length > 0) {
+      validMatches.sort((a, b) => {
+        let stockA = (a.item.tm > 0 ? 100 : 0) + (a.item.k > 0 ? 50 : 0) + a.item.s;
+        let stockB = (b.item.tm > 0 ? 100 : 0) + (b.item.k > 0 ? 50 : 0) + b.item.s;
+        return stockB - stockA;
+      });
+      return validMatches[0].item;
+    }
+  }
+
+  return null;
+}
+
+// ==================== QUYẾT ĐỊNH ĐIỂM SOẠN & VỊ TRÍ CHUẨN ====================
+function evaluateItemDecision(tiem_ton, kho_ton, sv_ton, qty, targetMatched) {
+  let decision = '';
+  let targetLoc = '';
+  let targetMota = '';
+  let tagClass = '';
+  let isOut = false;
+
+  // 1. Khi cả 3 kho đều = 0 (Hết hàng hoàn toàn)
+  if (tiem_ton === 0 && kho_ton === 0 && sv_ton === 0) {
+    decision = '❌ HẾT HÀNG';
+    tagClass = 'tag-out';
+    isOut = true;
+    if (saleMode === 'tiem') {
+      targetLoc = targetMatched.tv || targetMatched.kv || 'Chưa có vị trí';
+      targetMota = targetMatched.tm_m || targetMatched.km || '';
+    } else {
+      targetLoc = targetMatched.kv || targetMatched.tv || 'Chưa có vị trí';
+      targetMota = targetMatched.km || targetMatched.tm_m || '';
+    }
+  } else if (qty <= 0) {
+    decision = '➖ CHƯA ĐIỀN SL';
+    tagClass = 'tag-kho';
+    if (saleMode === 'tiem') {
+      targetLoc = targetMatched.tv || targetMatched.kv || 'Chưa có vị trí';
+      targetMota = targetMatched.tm_m || targetMatched.km || '';
+    } else {
+      targetLoc = targetMatched.kv || targetMatched.tv || 'Chưa có vị trí';
+      targetMota = targetMatched.km || targetMatched.tm_m || '';
+    }
+  } 
+  // 2. Chế độ Bán lẻ tại Tiệm
+  else if (saleMode === 'tiem') {
+    if (tiem_ton >= qty) {
+      decision = '🏪 LẤY TẠI TIỆM';
+      targetLoc = targetMatched.tv || targetMatched.kv || 'Chưa có vị trí';
+      targetMota = targetMatched.tm_m || targetMatched.km || '';
+      tagClass = 'tag-tiem';
+    } else if (tiem_ton > 0) {
+      let needed = qty - tiem_ton;
+      if (kho_ton >= needed) {
+        decision = '⚠️ TIỆM (' + tiem_ton + ') + KHO (' + needed + ')';
+      } else if (kho_ton > 0) {
+        decision = '⚠️ TIỆM (' + tiem_ton + ') + KHO (' + kho_ton + ')';
+      } else {
+        decision = '⚠️ CHỈ CÒN TIỆM (' + tiem_ton + ')';
+      }
+      targetLoc = targetMatched.tv || targetMatched.kv || 'Chưa có vị trí';
+      targetMota = targetMatched.tm_m || targetMatched.km || '';
+      tagClass = 'tag-warn';
+    } else if (kho_ton > 0 || sv_ton > 0) {
+      if (kho_ton >= qty) {
+        decision = '🚚 LẤY KHO 2KM';
+      } else if (kho_ton > 0) {
+        decision = '⚠️ CHỈ CÒN KHO (' + kho_ton + ')';
+      } else {
+        decision = '⚠️ LỆCH KHO (SV: ' + sv_ton + ')';
+      }
+      targetLoc = targetMatched.kv || targetMatched.tv || 'Chưa có vị trí';
+      targetMota = targetMatched.km || targetMatched.tm_m || '';
+      tagClass = (kho_ton >= qty) ? 'tag-kho' : 'tag-warn';
+    }
+  } 
+  // 3. Chế độ Kho Gửi Xe Khách
+  else {
+    if (kho_ton >= qty) {
+      decision = '📦 LẤY TẠI KHO';
+      targetLoc = targetMatched.kv || targetMatched.tv || 'Chưa có vị trí';
+      targetMota = targetMatched.km || targetMatched.tm_m || '';
+      tagClass = 'tag-kho';
+    } else if (kho_ton > 0) {
+      let needed = qty - kho_ton;
+      if (tiem_ton >= needed) {
+        decision = '⚠️ KHO (' + kho_ton + ') + TIỆM (' + needed + ')';
+      } else if (tiem_ton > 0) {
+        decision = '⚠️ KHO (' + kho_ton + ') + TIỆM (' + tiem_ton + ')';
+      } else {
+        decision = '⚠️ CHỈ CÒN KHO (' + kho_ton + ')';
+      }
+      targetLoc = targetMatched.kv || targetMatched.tv || 'Chưa có vị trí';
+      targetMota = targetMatched.km || targetMatched.tm_m || '';
+      tagClass = 'tag-warn';
+    } else if (tiem_ton > 0 || sv_ton > 0) {
+      if (tiem_ton >= qty) {
+        decision = '🏪 LẤY TẠI TIỆM';
+      } else if (tiem_ton > 0) {
+        decision = '⚠️ CHỈ CÒN TIỆM (' + tiem_ton + ')';
+      } else {
+        decision = '⚠️ LỆCH KHO (SV: ' + sv_ton + ')';
+      }
+      targetLoc = targetMatched.tv || targetMatched.kv || 'Chưa có vị trí';
+      targetMota = targetMatched.tm_m || targetMatched.km || '';
+      tagClass = (tiem_ton >= qty) ? 'tag-tiem' : 'tag-warn';
+    }
+  }
+  return { decision, targetLoc, targetMota, tagClass, isOut };
+}
+
+function getShortLoc(locStr) {
+  if (!locStr || locStr === '0') return '0';
+  return locStr.replace(/\(.*?\)/g, '').trim();
+}
+
+function getPerson(locStr, metaPerson) {
+  if (metaPerson && metaPerson !== '0') return metaPerson;
+  if (!locStr) return '-';
+  let m = locStr.match(/\((.*?)\)/);
+  if (m && m[1]) return m[1].trim();
+  return '-';
+}
+
+function getSortRank(locStr) {
+  if (!locStr) return 999999;
+  let str = locStr.toUpperCase();
+  let rank = 100000;
+  if (str.includes('TRỆT') || str.includes('CHỆT')) rank = 10000;
+  else if (str.includes('LẦU 1') || str.includes('LAU 1')) rank = 20000;
+  else if (str.includes('LẦU 2') || str.includes('LAU 2')) rank = 30000;
+  else if (str.includes('LẦU 3') || str.includes('LAU 3')) rank = 40000;
+  
+  let keM = str.match(/KỆ\s*([0-9]+)/);
+  if (keM) rank += parseInt(keM[1]) * 100;
+  let tangM = str.match(/TẦNG\s*([0-9]+)/);
+  if (tangM) rank += parseInt(tangM[1]) * 10;
+  let oM = str.match(/Ô\s*([0-9]+)/);
+  if (oM) rank += parseInt(oM[1]);
+  return rank;
+}
+
+function debounceProcess() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(processSearch, 300);
+}
+
+function pasteSample() {
+  document.getElementById('inputCodes').value = "35601-07H00V000K 1\n61000K1NV10ZA 2\n3500T-VA2-9000 1\n27601-46G20V000P 1\nA.11833 1\nA.1830 1\nA.1230 1\n5053AKPHE20 5\nA.4041 5";
+  processSearch();
+}
+
+function processSearch() {
+  let text = document.getElementById('inputCodes').value.trim();
+  if (!text) {
+    document.getElementById('resultBody').innerHTML = '<tr><td colspan="11" style="text-align:center; color:#94a3b8; padding:30px;">Chưa có dữ liệu. Hãy dán mã hoặc tên hàng vào ô bên trái.</td></tr>';
+    document.getElementById('outAlert').style.display = 'none';
+    lastResults = [];
+    return;
+  }
+
+  let queries = parseInputToQueries(text);
+  let results = [];
+  let outOfStockList = [];
+
+  queries.forEach(item => {
+    let matched = findBestMatch(item.q);
+    if (matched) {
+      let code = matched.c;
+      let ten = matched.t || 'Chưa có tên';
+      let dvt = matched.d || 'Cái';
+      let tiem_ton = matched.tm || 0;
+      let kho_ton = matched.k || 0;
+      let sv_ton = matched.s || 0;
+
+      // Tính lại Tồn Tiệm nếu đang ở chế độ Tiệm và Tồn Tiệm gốc = 0
+      if (saleMode === 'tiem' && tiem_ton === 0) {
+        tiem_ton = Math.max(0, sv_ton - kho_ton);
+      }
+
+      let res = evaluateItemDecision(tiem_ton, kho_ton, sv_ton, item.qty, matched);
+      if (res.isOut) {
+        outOfStockList.push(code + ' (' + ten + ')');
+      }
+
+      results.push({
+        decision: res.decision,
+        tagClass: res.tagClass,
+        code: code,
+        ten: ten,
+        dvt: dvt,
+        qty: item.qty,
+        tiem_ton: tiem_ton,
+        kho_ton: kho_ton,
+        sv_ton: sv_ton,
+        vitri: res.targetLoc,
+        short_loc: getShortLoc(res.targetLoc),
+        person: getPerson(res.targetLoc, res.targetMota),
+        rank: getSortRank(res.targetLoc),
+        matchedObj: matched
+      });
+    } else {
+      results.push({
+        decision: '❓ KHÔNG TÌM THẤY',
+        tagClass: 'tag-out',
+        code: '-',
+        ten: item.q,
+        dvt: '-',
+        qty: item.qty,
+        tiem_ton: 0,
+        kho_ton: 0,
+        sv_ton: 0,
+        vitri: 'Không tìm thấy thông tin',
+        short_loc: '-',
+        person: '-',
+        rank: 999999,
+        matchedObj: null
+      });
+    }
+  });
+
+  renderTableResults(results, outOfStockList);
+}
+
+function renderTableResults(results, outOfStockList) {
+  results.sort((a, b) => {
+    if (saleMode === 'tiem') {
+      let getScore = (r) => {
+        let dec = (r.decision || '').toUpperCase();
+        if (dec.includes('HẾT HÀNG') || dec.includes('KHÔNG TÌM THẤY')) return 1;
+        if (dec.includes('TIỆM')) return 2;
+        if (dec.includes('KHO') || dec.includes('2KM')) return 3;
+        return 4;
+      };
+      let scoreA = getScore(a);
+      let scoreB = getScore(b);
+      if (scoreA !== scoreB) return scoreA - scoreB;
+    }
+    return (a.rank || 99999) - (b.rank || 99999);
+  });
+  lastResults = results;
+
+  let tbody = document.getElementById('resultBody');
+  tbody.innerHTML = '';
+  results.forEach((r, idx) => {
+    let tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="text-align: center; font-weight: bold;">${idx + 1}</td>
+      <td><span class="tag-loc ${r.tagClass}">${r.decision}</span></td>
+      <td class="code-cell">${r.code}</td>
+      <td style="font-weight: 600; color: #1e293b;">${r.ten}</td>
+      <td style="text-align: center;">${r.dvt}</td>
+      <td style="text-align: center;">
+        <input type="number" min="0" value="${r.qty}" class="sl-input" onchange="updateQty(${idx}, this.value)" style="width: 55px; text-align: center; font-weight: bold; border: 1px solid #94a3b8; border-radius: 4px; padding: 3px 2px; font-size: 12px; color: #b91c1c; background: #fff;">
+      </td>
+      <td class="stock-num" style="color:#15803d;">${r.tiem_ton}</td>
+      <td class="stock-num" style="color:#0369a1;">${r.kho_ton}</td>
+      <td class="stock-num" style="color:#b91c1c;">${r.sv_ton}</td>
+      <td class="pos-cell">${r.vitri || '<span style="color:#94a3b8; font-weight:normal;">0</span>'}</td>
+      <td style="font-weight: 700; text-align: center;">${r.person}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  let alertEl = document.getElementById('outAlert');
+  if (outOfStockList.length > 0) {
+    alertEl.style.display = 'block';
+    alertEl.innerHTML = '⚠️ <b>CẢNH BÁO HẾT HÀNG (' + outOfStockList.length + ' món):</b> ' + outOfStockList.join(' | ');
+  } else {
+    alertEl.style.display = 'none';
+  }
+
+  let printDateEl = document.getElementById('printDate');
+  if (printDateEl) printDateEl.innerText = new Date().toLocaleString('vi-VN');
+}
+
+function updateQty(idx, newQty) {
+  let val = parseFloat(newQty);
+  if (isNaN(val) || val < 0) val = 0;
+  if (lastResults && lastResults[idx]) {
+    lastResults[idx].qty = val;
+    let results = [];
+    let outOfStockList = [];
+    lastResults.forEach(r => {
+      if (r.matchedObj) {
+        let res = evaluateItemDecision(r.tiem_ton, r.kho_ton, r.sv_ton, r.qty, r.matchedObj);
+        if (res.isOut) {
+          outOfStockList.push(r.code + ' (' + r.ten + ')');
+        }
+        r.decision = res.decision;
+        r.tagClass = res.tagClass;
+        r.vitri = res.targetLoc;
+        r.short_loc = getShortLoc(res.targetLoc);
+        r.person = getPerson(res.targetLoc, res.targetMota);
+        r.rank = getSortRank(res.targetLoc);
+      }
+      results.push(r);
+    });
+    renderTableResults(results, outOfStockList);
+  }
+}
+
+function copyTableData() {
+  const table = document.getElementById('mainTable');
+  let text = '';
+  for (let row of table.rows) {
+    let rowData = [];
+    for (let cell of row.cells) {
+      let input = cell.querySelector('input');
+      if (input) {
+        rowData.push(input.value);
+      } else {
+        rowData.push(cell.innerText.replace(/\n/g, ' '));
+      }
+    }
+    text += rowData.join('\t') + '\n';
+  }
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Đã sao chép bảng dữ liệu! Bạn có thể dán (Ctrl+V) vào Excel.');
+  });
+}
+</script>
+
+
+</body></html>
