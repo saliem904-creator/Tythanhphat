@@ -110,8 +110,8 @@
 
 <div class="header no-print">
   <div>
-    <h1>⚡ HỆ THỐNG TRA CỨU, ĐẢO TỪ & PHÂN TÍCH SOẠN HÀNG</h1>
-    <p style="font-size: 11.5px; color: #64748b;">Hỗ trợ: Tìm gần đúng, Đảo chữ (không dấu), Dán ảnh chụp toa, Tải File Excel đơn hàng</p>
+    <h1>⚡ HỆ THÔNG TRA CỨU & PHÂN TÍCH SOẠN HÀNG</h1>
+    <p style="font-size: 11.5px; color: #64748b;">Hỗ trợ: Tìm gần đúng, đảo chữ (không dấu), dán ảnh chụp toa, tải File Excel đơn hàng</p>
   </div>
   <div id="dbStatus" class="status-badge badge-warn">⚠️ Đang kiểm tra dữ liệu...</div>
 </div>
@@ -215,7 +215,7 @@ A.4041 5"></textarea>
               <th style="width: 60px; text-align: center; color:#b91c1c;">SL (Đơn Hàng)</th>
               <th style="width: 45px; text-align: center; color:#15803d;">Tiệm</th>
               <th style="width: 45px; text-align: center; color:#0369a1;">Kho</th>
-              <th style="width: 45px; text-align: center; color:#b91c1c;">SV</th>
+              <th style="width: 45px; text-align: center; color:#be1d1d;">SV</th>
               <th>Vị Trí Kệ - Tầng (Chi tiết)</th>
               <th style="text-align: center;">Người giữ</th>
             </tr>
@@ -1014,23 +1014,51 @@ function processSearch() {
 }
 
 function renderTableResults(results, outOfStockList) {
+  // LOGIC SẮP XẾP MỚI TỐI ƯU CHO NHÂN VIÊN SOẠN HÀNG
   results.sort((a, b) => {
-    if (saleMode === 'tiem') {
-      let getScore = (r) => {
-        let dec = (r.decision || '').toUpperCase();
-        if (dec.includes('HẾT HÀNG') || dec.includes('KHÔNG TÌM THẤY') || dec.includes('THIẾU HÀNG')) return 1;
-        if (dec.includes('TIỆM')) return 2;
-        if (dec.includes('KHO') || dec.includes('2KM')) return 3;
-        return 4;
-      };
-      let scoreA = getScore(a);
-      let scoreB = getScore(b);
-      if (scoreA !== scoreB) return scoreA - scoreB;
+    let getScore = (r) => {
+      let dec = (r.decision || '').toUpperCase();
+      
+      // 1. Hết hàng hoàn toàn hoặc Không tìm thấy (Ưu tiên báo khách ngay)
+      if (dec.includes('HẾT HÀNG') || dec.includes('KHÔNG TÌM THẤY')) return 1;
+      
+      // 2. Có hàng nhưng Không đủ số lượng (Khách mua 10 tồn 9)
+      if (dec.includes('THIẾU HÀNG')) return 2;
+      
+      // 3. Hàng nằm chi nhánh khác (Đang ở Tiệm thì gom Kho đưa lên trước và ngược lại)
+      if (saleMode === 'tiem' && (dec.includes('LẤY KHO 2KM') || dec.includes('CHỈ CÒN KHO'))) return 3;
+      if (saleMode === 'kho' && (dec.includes('LẤY TẠI TIỆM') || dec.includes('CHỈ CÒN TIỆM'))) return 3;
+      
+      // 4. Hàng nằm rải rác cả 2 nơi (Phải đi 2 chỗ)
+      if (dec.includes('TIỆM') && dec.includes('KHO')) return 4;
+      
+      // 5. Hàng nằm tại chỗ (Dễ nhất, soạn sau cùng)
+      return 5; 
+    };
+
+    let scoreA = getScore(a);
+    let scoreB = getScore(b);
+    
+    // Tiêu chí 1: Đưa hàng lỗi/thiếu/khác chi nhánh lên đầu
+    if (scoreA !== scoreB) return scoreA - scoreB;
+
+    // Tiêu chí 2: Cùng một Trạng thái -> GOM NHÓM THEO NGƯỜI GIỮ
+    let personA = (a.person || '-').toUpperCase();
+    let personB = (b.person || '-').toUpperCase();
+    if (personA !== personB) {
+        // Mấy món không ghi tên người giữ ('-') thì vứt xuống dưới cùng của nhóm
+        if (personA === '-') return 1;
+        if (personB === '-') return -1;
+        return personA.localeCompare(personB);
     }
-    return (a.rank || 99999) - (b.rank || 99999);
+
+    // Tiêu chí 3: Cùng Người giữ -> SẮP XẾP THEO KỆ / TẦNG để xách rổ đi 1 vòng là xong
+    return (a.rank || 999999) - (b.rank || 999999);
   });
+
   lastResults = results;
 
+  // Render ra HTML
   let tbody = document.getElementById('resultBody');
   tbody.innerHTML = '';
   results.forEach((r, idx) => {
@@ -1048,11 +1076,12 @@ function renderTableResults(results, outOfStockList) {
       <td class="stock-num" style="color:#0369a1;">${r.kho_ton}</td>
       <td class="stock-num" style="color:#b91c1c;">${r.sv_ton}</td>
       <td class="pos-cell">${r.vitri || '<span style="color:#94a3b8; font-weight:normal;">0</span>'}</td>
-      <td style="font-weight: 700; text-align: center;">${r.person}</td>
+      <td style="font-weight: 700; text-align: center; color: #b91c1c;">${r.person}</td>
     `;
     tbody.appendChild(tr);
   });
 
+  // Hiển thị cảnh báo tổng hợp
   let alertEl = document.getElementById('outAlert');
   if (outOfStockList.length > 0) {
     alertEl.style.display = 'block';
