@@ -110,8 +110,8 @@
 
 <div class="header no-print">
   <div>
-    <h1>⚡ HỆ THÔNG TRA CỨU & PHÂN TÍCH SOẠN HÀNG</h1>
-    <p style="font-size: 11.5px; color: #64748b;">Hỗ trợ: Tìm gần đúng, đảo chữ (không dấu), dán ảnh chụp toa, tải File Excel đơn hàng</p>
+    <h1>⚡ HỆ THỐNG TRA CỨU, ĐẢO TỪ & PHÂN TÍCH SOẠN HÀNG</h1>
+    <p style="font-size: 11.5px; color: #64748b;">Hỗ trợ: Tìm gần đúng, Đảo chữ (không dấu), Dán ảnh chụp toa, Tải File Excel đơn hàng</p>
   </div>
   <div id="dbStatus" class="status-badge badge-warn">⚠️ Đang kiểm tra dữ liệu...</div>
 </div>
@@ -127,7 +127,7 @@
         <button id="btnSaleTiem" class="mode-btn active" onclick="setSaleMode('tiem')">🏪 Bán Lẻ Tại Tiệm</button>
         <button id="btnSaleKho" class="mode-btn" onclick="setSaleMode('kho')">📦 Kho Gửi Xe Khách</button>
       </div>
-      <p style="font-size: 11px; color: #64748b;">* Hệ thống tự tính toán ưu tiên vị trí có hàng gần nhất để bạn soạn.</p>
+      <p style="font-size: 11px; color: #64748b;">* Hệ thống tự động thiết lập lộ trình soạn hàng phù hợp với điểm bạn chọn.</p>
     </div>
 
     <div class="card">
@@ -162,7 +162,6 @@ A.4041 5"></textarea>
         <button class="btn btn-outline" style="padding: 2px 6px; font-size: 10px; color: var(--danger);" onclick="clearDatabase()">Xóa bộ nhớ</button>
       </div>
       
-      <!-- NÚT ĐỒNG BỘ MỚI (FIX LỖI CẬP NHẬT GITHUB) -->
       <button class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 8px; font-size: 12px; padding: 10px; background: #0369a1;" onclick="fetchDataFromServer()">
         🔄 ĐỒNG BỘ DỮ LIỆU TỪ MÁY CHỦ
       </button>
@@ -188,7 +187,7 @@ A.4041 5"></textarea>
       </div>
 
       <div class="card-title no-print" style="margin-bottom: 6px;">
-        <span>📋 BẢNG SOẠN HÀNG & GỢI Ý ĐIỂM LẤY TỐI ƯU</span>
+        <span>📋 BẢNG LỘ TRÌNH SOẠN HÀNG THÔNG MINH</span>
         <div class="btn-group" style="margin-top: 0;">
           <button class="btn btn-success" onclick="copyTableData()">📋 Copy dán vào Excel</button>
           <button class="btn btn-outline" onclick="window.print()">🖨️ In A4</button>
@@ -212,10 +211,10 @@ A.4041 5"></textarea>
               <th>Mã Hàng</th>
               <th>Tên hàng</th>
               <th style="width: 40px; text-align: center;">ĐVT</th>
-              <th style="width: 60px; text-align: center; color:#b91c1c;">SL (Đơn Hàng)</th>
+              <th style="width: 60px; text-align: center; color:#b91c1c;">SL</th>
               <th style="width: 45px; text-align: center; color:#15803d;">Tiệm</th>
               <th style="width: 45px; text-align: center; color:#0369a1;">Kho</th>
-              <th style="width: 45px; text-align: center; color:#be1d1d;">SV</th>
+              <th style="width: 45px; text-align: center; color:#b91c1c;">SV</th>
               <th>Vị Trí Kệ - Tầng (Chi tiết)</th>
               <th style="text-align: center;">Người giữ</th>
             </tr>
@@ -315,19 +314,14 @@ async function clearDatabase() {
   processSearch();
 }
 
-// ---------------------------------------------------------
-// HÀM MỚI: TỰ ĐỘNG KÉO DATA TỪ GITHUB (TRÁNH LỖI PHẢI UPLOAD THỦ CÔNG)
-// ---------------------------------------------------------
 async function fetchDataFromServer() {
   const dbStatus = document.getElementById('dbStatus');
   dbStatus.innerText = '⏳ Đang đồng bộ dữ liệu từ Server...';
   dbStatus.className = 'status-badge badge-warn';
 
   try {
-    // Thêm timestamp để ép trình duyệt không cache file cũ
     const timestamp = new Date().getTime();
     
-    // Yêu cầu trên Github phải có đúng 3 tên file này:
     const [svRes, khoRes, tiemRes] = await Promise.all([
       fetch('./SV.xlsx?v=' + timestamp),
       fetch('./KHO.xlsx?v=' + timestamp),
@@ -353,22 +347,36 @@ async function fetchDataFromServer() {
       if(code) fileDataSV[code] = { c: code, t: (rowsSV[i][1] || '').toString().trim(), d: (rowsSV[i][2] || '').toString().trim(), s: parseFloat(rowsSV[i][6]) || 0 };
     }
 
-    // Xử lý KHO
+    // Xử lý KHO (Bổ sung lấy cột Nhóm hàng)
     let wbKho = XLSX.read(new Uint8Array(khoData), { type: 'array' });
     let rowsKho = XLSX.utils.sheet_to_json(wbKho.Sheets[wbKho.SheetNames[0]], { header: 1 });
     fileDataKho = {};
     for (let i = 1; i < rowsKho.length; i++) {
       const code = (rowsKho[i][2] || '').toString().trim();
-      if(code) fileDataKho[code] = { t: (rowsKho[i][4] || '').toString().trim(), d: (rowsKho[i][14] || '').toString().trim(), k: parseFloat(rowsKho[i][8]) || 0, kv: (rowsKho[i][25] || '').toString().trim(), km: (rowsKho[i][23] || '').toString().trim() };
+      if(code) fileDataKho[code] = { 
+          nhom: (rowsKho[i][1] || '').toString().trim(), // Nhóm hàng
+          t: (rowsKho[i][4] || '').toString().trim(), 
+          d: (rowsKho[i][14] || '').toString().trim(), 
+          k: parseFloat(rowsKho[i][8]) || 0, 
+          kv: (rowsKho[i][25] || '').toString().trim(), 
+          km: (rowsKho[i][23] || '').toString().trim() 
+      };
     }
 
-    // Xử lý TIEM
+    // Xử lý TIEM (Bổ sung lấy cột Nhóm hàng)
     let wbTiem = XLSX.read(new Uint8Array(tiemData), { type: 'array' });
     let rowsTiem = XLSX.utils.sheet_to_json(wbTiem.Sheets[wbTiem.SheetNames[0]], { header: 1 });
     fileDataTiem = {};
     for (let i = 1; i < rowsTiem.length; i++) {
       const code = (rowsTiem[i][2] || '').toString().trim();
-      if(code) fileDataTiem[code] = { t: (rowsTiem[i][4] || '').toString().trim(), d: (rowsTiem[i][14] || '').toString().trim(), tm: parseFloat(rowsTiem[i][8]) || 0, tv: (rowsTiem[i][25] || '').toString().trim(), tm_m: (rowsTiem[i][23] || '').toString().trim() };
+      if(code) fileDataTiem[code] = { 
+          nhom: (rowsTiem[i][1] || '').toString().trim(), // Nhóm hàng
+          t: (rowsTiem[i][4] || '').toString().trim(), 
+          d: (rowsTiem[i][14] || '').toString().trim(), 
+          tm: parseFloat(rowsTiem[i][8]) || 0, 
+          tv: (rowsTiem[i][25] || '').toString().trim(), 
+          tm_m: (rowsTiem[i][23] || '').toString().trim() 
+      };
     }
     
     document.getElementById('countDoc').innerText = Object.keys(fileDataSV).length + ' mã';
@@ -478,7 +486,14 @@ function handleFileUpload(files) {
         for (let i = 1; i < rows.length; i++) {
           const code = (rows[i][2] || '').toString().trim();
           if (!code) continue;
-          fileDataKho[code] = { t: (rows[i][4] || '').toString().trim(), d: (rows[i][14] || '').toString().trim(), k: parseFloat(rows[i][8]) || 0, kv: (rows[i][25] || '').toString().trim(), km: (rows[i][23] || '').toString().trim() };
+          fileDataKho[code] = { 
+            nhom: (rows[i][1] || '').toString().trim(),
+            t: (rows[i][4] || '').toString().trim(), 
+            d: (rows[i][14] || '').toString().trim(), 
+            k: parseFloat(rows[i][8]) || 0, 
+            kv: (rows[i][25] || '').toString().trim(), 
+            km: (rows[i][23] || '').toString().trim() 
+          };
         }
         document.getElementById('countKho').innerText = Object.keys(fileDataKho).length + ' mã';
         await saveToDB('fileDataKho', fileDataKho);
@@ -488,7 +503,14 @@ function handleFileUpload(files) {
           const row = rows[i];
           const code = (row[2] || '').toString().trim();
           if (!code) continue;
-          fileDataTiem[code] = { t: (row[4] || '').toString().trim(), d: (row[14] || '').toString().trim(), tm: parseFloat(row[8]) || 0, tv: (row[25] || '').toString().trim(), tm_m: (row[23] || '').toString().trim() };
+          fileDataTiem[code] = { 
+            nhom: (row[1] || '').toString().trim(),
+            t: (row[4] || '').toString().trim(), 
+            d: (row[14] || '').toString().trim(), 
+            tm: parseFloat(row[8]) || 0, 
+            tv: (row[25] || '').toString().trim(), 
+            tm_m: (row[23] || '').toString().trim() 
+          };
         }
         document.getElementById('countTiem').innerText = Object.keys(fileDataTiem).length + ' mã';
         await saveToDB('fileDataTiem', fileDataTiem);
@@ -506,9 +528,17 @@ function mergeDatasets() {
     const kho = fileDataKho[code] || {};
     const tiem = fileDataTiem[code] || {};
     return {
-      c: code, t: sv.t || kho.t || tiem.t || '', d: sv.d || kho.d || tiem.d || '',
-      s: sv.s || 0, k: kho.k || 0, kv: kho.kv || '', km: kho.km || '',
-      tm: tiem.tm || 0, tv: tiem.tv || '', tm_m: tiem.tm_m || ''
+      c: code, 
+      nhom: kho.nhom || tiem.nhom || '',
+      t: sv.t || kho.t || tiem.t || '', 
+      d: sv.d || kho.d || tiem.d || '',
+      s: sv.s || 0, 
+      k: kho.k || 0, 
+      kv: kho.kv || '', 
+      km: kho.km || '',
+      tm: tiem.tm || 0, 
+      tv: tiem.tv || '', 
+      tm_m: tiem.tm_m || ''
     };
   });
   buildIndex(RAW_ITEMS);
@@ -804,9 +834,6 @@ function findBestMatch(queryStr) {
   return null;
 }
 
-// ---------------------------------------------------------
-// HÀM ĐÃ ĐƯỢC FIX LOGIC TỒN ẢO & THIẾU HÀNG & CẤN TRỪ
-// ---------------------------------------------------------
 function evaluateItemDecision(tiem_ton, kho_ton, sv_ton, qty, targetMatched) {
   let decision = '';
   let targetLoc = '';
@@ -817,83 +844,56 @@ function evaluateItemDecision(tiem_ton, kho_ton, sv_ton, qty, targetMatched) {
   let getLocKho = () => ({ loc: targetMatched.kv || targetMatched.tv || 'Chưa có vị trí', mota: targetMatched.km || targetMatched.tm_m || '' });
   let getLocTiem = () => ({ loc: targetMatched.tv || targetMatched.kv || 'Chưa có vị trí', mota: targetMatched.tm_m || targetMatched.km || '' });
 
-  // 1. TỒN ẢO (Rủi ro 3): Bất chấp KHO hay TIỆM còn hàng, hễ SV = 0 thì tin tưởng tuyệt đối là hết hàng.
   if (sv_ton <= 0) {
     decision = '❌ HẾT HÀNG (SV=0)';
     tagClass = 'tag-out';
     isOut = true;
     let locInfo = saleMode === 'tiem' ? getLocTiem() : getLocKho();
     targetLoc = locInfo.loc; targetMota = locInfo.mota;
-  } 
-  // Lỗi người dùng không nhập SL
-  else if (qty <= 0) {
+  } else if (qty <= 0) {
     decision = '➖ CHƯA ĐIỀN SL';
     tagClass = 'tag-kho';
     let locInfo = saleMode === 'tiem' ? getLocTiem() : getLocKho();
     targetLoc = locInfo.loc; targetMota = locInfo.mota;
-  } 
-  // 2. THIẾU HÀNG (Rủi ro 1): Tồn tổng nhỏ hơn số lượng khách mua
-  else if (sv_ton < qty) {
+  } else if (sv_ton < qty) {
     decision = '❌ THIẾU HÀNG (Chỉ còn ' + sv_ton + '/' + qty + ')';
     tagClass = 'tag-out';
     isOut = true;
     let locInfo = saleMode === 'tiem' ? getLocTiem() : getLocKho();
     targetLoc = locInfo.loc; targetMota = locInfo.mota;
-  } 
-  // BÁN LẺ TẠI TIỆM
-  else if (saleMode === 'tiem') {
+  } else if (saleMode === 'tiem') {
     let locInfo = getLocTiem();
     targetLoc = locInfo.loc; targetMota = locInfo.mota;
-    
     if (tiem_ton >= qty) {
       decision = '🏪 LẤY TẠI TIỆM';
       tagClass = 'tag-tiem';
     } else if (tiem_ton > 0) {
       let needed = qty - tiem_ton;
-      if (kho_ton >= needed) {
-        decision = '⚠️ TIỆM (' + tiem_ton + ') + KHO (' + needed + ')';
-      } else {
-        decision = '⚠️ TIỆM (' + tiem_ton + ') + KHO (' + kho_ton + ')';
-      }
+      if (kho_ton >= needed) decision = '⚠️ TIỆM (' + tiem_ton + ') + KHO (' + needed + ')';
+      else decision = '⚠️ TIỆM (' + tiem_ton + ') + KHO (' + kho_ton + ')';
       tagClass = 'tag-warn';
     } else {
       let locKho = getLocKho();
       targetLoc = locKho.loc; targetMota = locKho.mota;
-      if (kho_ton >= qty) {
-        decision = '🚚 LẤY KHO 2KM';
-        tagClass = 'tag-kho';
-      } else {
-        decision = '⚠️ LỆCH KHO (SV: ' + sv_ton + ')';
-        tagClass = 'tag-warn';
-      }
+      if (kho_ton >= qty) { decision = '🚚 LẤY KHO 2KM'; tagClass = 'tag-kho'; }
+      else { decision = '⚠️ LỆCH KHO (SV: ' + sv_ton + ')'; tagClass = 'tag-warn'; }
     }
-  } 
-  // KHO GỬI XE KHÁCH
-  else {
+  } else {
     let locInfo = getLocKho();
     targetLoc = locInfo.loc; targetMota = locInfo.mota;
-    
     if (kho_ton >= qty) {
       decision = '📦 LẤY TẠI KHO';
       tagClass = 'tag-kho';
     } else if (kho_ton > 0) {
       let needed = qty - kho_ton;
-      if (tiem_ton >= needed) {
-        decision = '⚠️ KHO (' + kho_ton + ') + TIỆM (' + needed + ')';
-      } else {
-        decision = '⚠️ KHO (' + kho_ton + ') + TIỆM (' + tiem_ton + ')';
-      }
+      if (tiem_ton >= needed) decision = '⚠️ KHO (' + kho_ton + ') + TIỆM (' + needed + ')';
+      else decision = '⚠️ KHO (' + kho_ton + ') + TIỆM (' + tiem_ton + ')';
       tagClass = 'tag-warn';
     } else {
       let locTiem = getLocTiem();
       targetLoc = locTiem.loc; targetMota = locTiem.mota;
-      if (tiem_ton >= qty) {
-        decision = '🏪 LẤY TẠI TIỆM';
-        tagClass = 'tag-tiem';
-      } else {
-        decision = '⚠️ LỆCH KHO (SV: ' + sv_ton + ')';
-        tagClass = 'tag-warn';
-      }
+      if (tiem_ton >= qty) { decision = '🏪 LẤY TẠI TIỆM'; tagClass = 'tag-tiem'; }
+      else { decision = '⚠️ LỆCH KHO (SV: ' + sv_ton + ')'; tagClass = 'tag-warn'; }
     }
   }
   return { decision, targetLoc, targetMota, tagClass, isOut };
@@ -963,8 +963,6 @@ function processSearch() {
       let kho_ton = matched.k || 0;
       let sv_ton = matched.s || 0;
 
-      // ĐÃ FIX: Luôn luôn cấn trừ Tồn Tiệm nếu Tồn Tiệm gốc = 0 mà SV > Kho, 
-      // Không bị kẹt điều kiện saleMode nữa
       if (kho_ton < sv_ton && tiem_ton === 0) {
         tiem_ton = sv_ton - kho_ton;
       }
@@ -1013,52 +1011,81 @@ function processSearch() {
   renderTableResults(results, outOfStockList);
 }
 
+// ========================================================
+// HÀM SẮP XẾP LỘ TRÌNH ĐI KHO (BẢN TỐI ƯU CHO VIỆT & LINH)
+// ========================================================
 function renderTableResults(results, outOfStockList) {
-  // LOGIC SẮP XẾP MỚI TỐI ƯU CHO NHÂN VIÊN SOẠN HÀNG
   results.sort((a, b) => {
     let getScore = (r) => {
       let dec = (r.decision || '').toUpperCase();
+      let loc = (r.vitri || '').toUpperCase();
       
-      // 1. Hết hàng hoàn toàn hoặc Không tìm thấy (Ưu tiên báo khách ngay)
-      if (dec.includes('HẾT HÀNG') || dec.includes('KHÔNG TÌM THẤY')) return 1;
+      // Top 1: Hết hàng hoàn toàn hoặc Không tìm thấy
+      if (dec.includes('HẾT HÀNG') || dec.includes('KHÔNG TÌM THẤY')) return 10;
       
-      // 2. Có hàng nhưng Không đủ số lượng (Khách mua 10 tồn 9)
-      if (dec.includes('THIẾU HÀNG')) return 2;
+      // Top 2: Thiếu hàng
+      if (dec.includes('THIẾU HÀNG')) return 20;
       
-      // 3. Hàng nằm chi nhánh khác (Đang ở Tiệm thì gom Kho đưa lên trước và ngược lại)
-      if (saleMode === 'tiem' && (dec.includes('LẤY KHO 2KM') || dec.includes('CHỈ CÒN KHO'))) return 3;
-      if (saleMode === 'kho' && (dec.includes('LẤY TẠI TIỆM') || dec.includes('CHỈ CÒN TIỆM'))) return 3;
+      // Top 3: Món chi nhánh khác soạn toàn bộ
+      if (saleMode === 'kho' && (dec.includes('LẤY TẠI TIỆM') || dec.includes('CHỈ CÒN TIỆM'))) return 30;
+      if (saleMode === 'tiem' && (dec.includes('LẤY KHO 2KM') || dec.includes('CHỈ CÒN KHO'))) return 30;
       
-      // 4. Hàng nằm rải rác cả 2 nơi (Phải đi 2 chỗ)
-      if (dec.includes('TIỆM') && dec.includes('KHO')) return 4;
+      // Top 4: Món lấy thêm cho đủ (Chia 2 nơi)
+      if (dec.includes('TIỆM') && dec.includes('KHO')) return 40;
       
-      // 5. Hàng nằm tại chỗ (Dễ nhất, soạn sau cùng)
-      return 5; 
+      // Top 7: Chưa có vị trí
+      if (!loc || loc.includes('CHƯA CÓ VỊ TRÍ') || loc === '0') return 70;
+      
+      // TOP 5: Hàng tại chỗ - Của Linh
+      if (loc.includes('LINH')) return 50;
+      
+      // TOP 6: Hàng tại chỗ - Của Việt (Phân rã theo nhóm hàng)
+      if (loc.includes('VIỆT') || loc.includes('VIET')) {
+          // Kết hợp Nhóm Hàng (lấy từ Excel) và Tên hàng để quét chống lọt mã
+          let nhom = (r.matchedObj && r.matchedObj.nhom ? r.matchedObj.nhom : '').toUpperCase();
+          let ten = (r.ten || '').toUpperCase();
+          let groupText = nhom + ' ' + ten; 
+          
+          if (groupText.includes('RUỘT') || groupText.includes('RUOT')) return 61; // Lấy ruột trước
+          if (groupText.includes('NHỚT') || groupText.includes('NHOT')) return 62; // Xong tới lấy nhớt
+          if (groupText.includes('VỎ') || groupText.includes('VÕ')) return 63;    // Sang lấy vỏ xe
+          if (groupText.includes('MỦ ZIN') || groupText.includes('MU ZIN')) return 64; // Gom đồ mủ zin
+          
+          return 65; // Cuối cùng là các món còn lại mà Việt quản lý
+      }
+      
+      // TOP 6.9: Các anh em còn lại (Hải, Đỗ, Quí...)
+      return 69;
     };
 
     let scoreA = getScore(a);
     let scoreB = getScore(b);
     
-    // Tiêu chí 1: Đưa hàng lỗi/thiếu/khác chi nhánh lên đầu
+    // Tiêu chí 1: Xếp theo nhóm trạng thái / độ ưu tiên
     if (scoreA !== scoreB) return scoreA - scoreB;
 
-    // Tiêu chí 2: Cùng một Trạng thái -> GOM NHÓM THEO NGƯỜI GIỮ
-    let personA = (a.person || '-').toUpperCase();
-    let personB = (b.person || '-').toUpperCase();
-    if (personA !== personB) {
-        // Mấy món không ghi tên người giữ ('-') thì vứt xuống dưới cùng của nhóm
-        if (personA === '-') return 1;
-        if (personB === '-') return -1;
-        return personA.localeCompare(personB);
+    // Tiêu chí 2: Cùng một độ ưu tiên -> Gom nhóm chính xác theo TÊN TRONG NGOẶC (...) CỦA VỊ TRÍ
+    let getLocOwner = (loc) => {
+        if (!loc) return '-';
+        let m = loc.match(/\(\s*(.*?)\s*\)/);
+        return m ? m[1].toUpperCase().trim() : '-';
+    };
+    
+    let ownerA = getLocOwner(a.vitri);
+    let ownerB = getLocOwner(b.vitri);
+    
+    if (ownerA !== ownerB) {
+        if (ownerA === '-') return 1;
+        if (ownerB === '-') return -1;
+        return ownerA.localeCompare(ownerB);
     }
 
-    // Tiêu chí 3: Cùng Người giữ -> SẮP XẾP THEO KỆ / TẦNG để xách rổ đi 1 vòng là xong
+    // Tiêu chí 3: Cùng nhóm -> Xếp Kệ / Tầng từ nhỏ đến lớn để nhặt 1 vòng là xong
     return (a.rank || 999999) - (b.rank || 999999);
   });
 
   lastResults = results;
 
-  // Render ra HTML
   let tbody = document.getElementById('resultBody');
   tbody.innerHTML = '';
   results.forEach((r, idx) => {
@@ -1081,12 +1108,11 @@ function renderTableResults(results, outOfStockList) {
     tbody.appendChild(tr);
   });
 
-  // Hiển thị cảnh báo tổng hợp
   let alertEl = document.getElementById('outAlert');
   if (outOfStockList.length > 0) {
     alertEl.style.display = 'block';
-    alertEl.innerHTML = '⚠️ <b>CẢNH BÁO THIẾU/HẾT HÀNG (' + outOfStockList.length + ' món):</b> ' + outOfStockList.join(' | ');
-  } else {
+    alertEl.innerHTML = '⚠️ <b>CẢNH BÁO THIẾU/HẾT HÀNG (' + outOfStockList.length + ' món) </b> ';
+} else {
     alertEl.style.display = 'none';
   }
 }
